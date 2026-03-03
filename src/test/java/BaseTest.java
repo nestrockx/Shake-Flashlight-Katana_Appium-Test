@@ -22,7 +22,7 @@ public class BaseTest {
         options.setApp("/Users/nestrock/AndroidStudioProjects/KatanaFlashlight-shake-phone-android-app/app/debug/app-debug.apk");
 
         // OPTION 2 — If already installed
-        // options.setAppPackage("com.example");
+        // options.setAppPackage("com.wegielek.katanaflashlight");
         // options.setAppActivity(".MainActivity");
 
         driver = new AndroidDriver(

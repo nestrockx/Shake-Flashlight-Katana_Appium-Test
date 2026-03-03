@@ -2,11 +2,16 @@ import io.appium.java_client.AppiumBy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Rectangle;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.PointerInput;
+import org.openqa.selenium.interactions.Sequence;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -147,11 +152,43 @@ public class KatanaTest extends BaseTest {
 
         assertEquals("Phone shake detection is running", notification.getText());
 
-        WebElement closeAction = waitForElement(
-                AppiumBy.androidUIAutomator(
-                        "new UiSelector().textContains(\"Turn off\")"
-                ), WAIT_STANDARD
-        );
+        WebElement closeAction;
+        try {
+            closeAction = waitForElement(
+                    AppiumBy.androidUIAutomator(
+                            "new UiSelector().textContains(\"Turn off\")"
+                    ), WAIT_SHORT
+            );
+        } catch (TimeoutException e) {
+            Rectangle rect = notification.getRect();
+
+            int startX = rect.x + rect.width / 2;
+            int startY = rect.y + rect.height / 3;
+            int endY = startY + 300;
+
+            PointerInput finger = new PointerInput(PointerInput.Kind.TOUCH, "finger");
+            Sequence swipe = new Sequence(finger, 1);
+
+            swipe.addAction(finger.createPointerMove(Duration.ZERO,
+                    PointerInput.Origin.viewport(),
+                    startX, startY));
+
+            swipe.addAction(finger.createPointerDown(PointerInput.MouseButton.LEFT.asArg()));
+
+            swipe.addAction(finger.createPointerMove(Duration.ofMillis(300),
+                    PointerInput.Origin.viewport(),
+                    startX, endY));
+
+            swipe.addAction(finger.createPointerUp(PointerInput.MouseButton.LEFT.asArg()));
+
+            driver.perform(Collections.singletonList(swipe));
+
+            closeAction = waitForElement(
+                    AppiumBy.androidUIAutomator(
+                            "new UiSelector().textContains(\"Turn off\")"
+                    ), WAIT_STANDARD
+            );
+        }
 
         assertEquals("Turn off", closeAction.getText());
         closeAction.click();
